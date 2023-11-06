@@ -41,6 +41,9 @@ To Create/Vote a poll, you have to:
     <img width="1118" alt="7  add more poll and vote" src="https://github.com/rathorevk/ex_poll/assets/146935994/8cd7e79e-3f9a-4505-bfc7-45997f900a2d">
 
 
+# Architecture
+<img width="377" alt="architecture" src="https://github.com/rathorevk/ex_poll/assets/146935994/2ef7f7ad-9eaf-48f3-99eb-ce7eecd9775d">
+
 ## Tests
 
 To run the tests for this project, simply run in your terminal:
