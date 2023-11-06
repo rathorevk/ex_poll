@@ -1,4 +1,5 @@
 defmodule ExPollWeb.PollLive.FormComponent do
+  alias ExPollWeb.Live.Helper
   use ExPollWeb, :live_component
 
   alias ExPoll.Polls
@@ -100,7 +101,9 @@ defmodule ExPollWeb.PollLive.FormComponent do
     case Polls.create_poll(socket.assigns.poll, poll_params) do
       {:ok, poll} ->
         Polls.create_options(options, poll.id)
-        :ok = ExPoll.broadcast_polls_update({:poll_inserted, Polls.get_poll(poll.id)})
+
+        :ok =
+          Helper.pubsub_client().broadcast_polls_update({:poll_inserted, Polls.get_poll(poll.id)})
 
         Logger.debug("New poll created: #{inspect(poll)}")
 

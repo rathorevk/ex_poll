@@ -32,6 +32,12 @@ defmodule ExPollWeb.ConnCase do
   end
 
   setup _tags do
+    ## Create ETS tables
+    :ets.new(:users, [:set, :public, :named_table, read_concurrency: true])
+    :ets.new(:polls, [:set, :public, :named_table, read_concurrency: true])
+    :ets.new(:options, [:set, :public, :named_table, read_concurrency: true])
+    :ets.new(:votes, [:set, :public, :named_table, read_concurrency: true])
+
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

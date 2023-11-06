@@ -8,10 +8,6 @@ defmodule ExPoll.PollsTest do
   @invalid_attrs %{text: nil, creator_id: nil}
 
   setup_all do
-    :ets.new(:users, [:set, :public, :named_table, read_concurrency: true])
-    :ets.new(:polls, [:set, :public, :named_table, read_concurrency: true])
-    :ets.new(:options, [:set, :public, :named_table, read_concurrency: true])
-
     {:ok, user} = Users.create_user(%{username: "test_user"})
 
     {:ok, user_id: user.id}
@@ -19,7 +15,7 @@ defmodule ExPoll.PollsTest do
 
   describe "create_poll/2" do
     setup do
-      on_exit(fn -> cleanup() end)
+      on_exit(fn -> cleanup_ets_tables() end)
 
       :ok
     end
@@ -43,7 +39,7 @@ defmodule ExPoll.PollsTest do
     setup context do
       poll = create_poll(context.user_id)
 
-      on_exit(fn -> cleanup() end)
+      on_exit(fn -> cleanup_ets_tables() end)
 
       {:ok, poll: poll}
     end
@@ -91,7 +87,7 @@ defmodule ExPoll.PollsTest do
 
   describe "list_polls/0" do
     setup do
-      on_exit(fn -> cleanup() end)
+      on_exit(fn -> cleanup_ets_tables() end)
 
       :ok
     end
@@ -104,7 +100,7 @@ defmodule ExPoll.PollsTest do
 
   describe "get_poll/1" do
     setup do
-      on_exit(fn -> cleanup() end)
+      on_exit(fn -> cleanup_ets_tables() end)
 
       :ok
     end
@@ -117,12 +113,6 @@ defmodule ExPoll.PollsTest do
     test "returns nil when the poll doesn't exist" do
       assert Polls.get_poll(Ecto.UUID.generate()) == nil
     end
-  end
-
-  defp cleanup do
-    :ets.delete_all_objects(:users)
-    :ets.delete_all_objects(:polls)
-    :ets.delete_all_objects(:options)
   end
 
   defp create_poll(user_id) do

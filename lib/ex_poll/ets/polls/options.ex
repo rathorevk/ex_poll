@@ -59,9 +59,10 @@ defmodule ExPoll.ETS.Polls.Options do
     end
   end
 
-  @spec add_vote(%Option{}) :: incremented_vote_count when incremented_vote_count: integer()
+  @spec add_vote(%Option{}) :: {:ok, %Option{}}
   def add_vote(%Option{id: id}) do
-    @table_name |> :ets.update_counter(id, {4, 1})
+    _result = @table_name |> :ets.update_counter(id, {4, 1})
+    {:ok, get(id)}
   end
 
   @spec get(id()) :: %Option{} | nil

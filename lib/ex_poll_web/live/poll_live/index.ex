@@ -3,6 +3,7 @@ defmodule ExPollWeb.PollLive.Index do
 
   alias ExPoll.Polls
   alias ExPoll.Schema.Poll
+  alias ExPollWeb.Live.Helper
 
   require Logger
 
@@ -17,7 +18,7 @@ defmodule ExPollWeb.PollLive.Index do
          |> push_navigate(to: ~p"/login")}
 
       user_id ->
-        if connected?(socket), do: ExPoll.subscribe_to_polls_updates()
+        if connected?(socket), do: Helper.pubsub_client().subscribe_to_polls_updates()
 
         polls = Polls.list_polls()
 
@@ -61,13 +62,12 @@ defmodule ExPollWeb.PollLive.Index do
     [poll_id, option_id] = String.split(hd(Map.values(params)), "||")
     user_id = socket.assigns.user_id
 
-    Polls.add_vote(%Poll.Option{id: option_id}, %{
-      poll_id: poll_id,
-      user_id: user_id,
-      option_id: option_id
-    })
+    {:ok, option} = Polls.add_vote(%Poll.Option{id: option_id}, %{user_id: user_id})
 
-    updated_polls = update_polls(socket.assigns.polls, Polls.get_poll(poll_id))
+    updated_poll = Polls.get_poll(option.poll_id)
+    :ok = Helper.pubsub_client().broadcast_polls_update({:poll_updated, updated_poll})
+
+    updated_polls = update_polls(socket.assigns.polls, updated_poll)
 
     {:noreply,
      assign(socket,
@@ -104,13 +104,12 @@ defmodule ExPollWeb.PollLive.Index do
     Logger.info("Recieved submit_vote event poll_id #{poll_id}, option_id #{option_id}")
     user_id = socket.assigns.user_id
 
-    Polls.add_vote(%Poll.Option{id: option_id}, %{
-      poll_id: poll_id,
-      user_id: user_id,
-      option_id: option_id
-    })
+    {:ok, option} = Polls.add_vote(%Poll.Option{id: option_id}, %{user_id: user_id})
 
-    updated_polls = update_polls(socket.assigns.polls, Polls.get_poll(poll_id))
+    updated_poll = Polls.get_poll(option.poll_id)
+    :ok = Helper.pubsub_client().broadcast_polls_update({:poll_updated, updated_poll})
+
+    updated_polls = update_polls(socket.assigns.polls, updated_poll)
 
     {:noreply,
      assign(socket,

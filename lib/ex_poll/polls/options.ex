@@ -89,10 +89,11 @@ defmodule ExPoll.Polls.Options do
         {:error, :option_not_found}
 
       option ->
-        OptionETS.add_vote(option)
+        {:ok, option} = OptionETS.add_vote(option)
 
-        {:ok, _vote} = Polls.Votes.create_vote(%Vote{}, attrs)
-        :ok = ExPoll.broadcast_polls_update({:poll_updated, Polls.get_poll(attrs.poll_id)})
+        vote_attrs = %{option_id: option.id, poll_id: option.poll_id, user_id: attrs.user_id}
+        {:ok, _vote} = Polls.Votes.create_vote(%Vote{}, vote_attrs)
+        {:ok, option}
     end
   end
 

@@ -39,4 +39,18 @@ defmodule ExPoll.DataCase do
       end)
     end)
   end
+
+  def create_ets_tables do
+    :ets.new(:users, [:set, :public, :named_table, read_concurrency: true])
+    :ets.new(:polls, [:set, :public, :named_table, read_concurrency: true])
+    :ets.new(:options, [:set, :public, :named_table, read_concurrency: true])
+    :ets.new(:votes, [:set, :public, :named_table, read_concurrency: true])
+  end
+
+  def cleanup_ets_tables do
+    :ets.delete_all_objects(:users)
+    :ets.delete_all_objects(:polls)
+    :ets.delete_all_objects(:options)
+    :ets.delete_all_objects(:votes)
+  end
 end
