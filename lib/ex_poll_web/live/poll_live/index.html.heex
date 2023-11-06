@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Poll</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <.header>
+      <:actions>
+        <.link patch={~p"/polls/new"}>
+          <.button>New Poll</.button>
+        </.link>
+        <.link patch={~p"/logout"}>
+          <.button phx-click="logout">Logout</.button>
+          <br /><br />
+        </.link>
+      </:actions>
+    </.header>
+
+    <div>
+      <%!-- Polls --%>
+      <%= for poll <- @polls do %>
+        <div class="w-full max-w-full bg-white border border-gray-500 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+          <%!-- Poll Logo and Text --%>
+          <div class="flex flex-col pb-5">
+            <legend class="font-medium text-xl text-gray-70 bg-gray-400 rounded mb-1">
+              <span class="inline-flex justify-center items-center w-12 h-12 rounded bg-yellow-400 text-white font-medium text-2xl">
+                P
+              </span>
+              <%= poll.text %>
+            </legend>
+            <!-- Show results of Polls which were submitted -->
+            <%= if MapSet.member?(@polls_voted, poll.id) do %>
+              <div class="formbold-radio-flex mb-1 mt-2 p-5">
+                <%= for {option, title} <- with_option_title(poll.options) do %>
+                  <div class="flex items-start justify-between min-w-0">
+                    <legend class="font-medium text-sm text-gray-700">
+                      <span class="inline-flex justify-center items-center w-6 h-6 rounded bg-purple-600 text-white font-medium text-sm">
+                        <%= title %>
+                      </span>
+                      <%= option.text %>
+                    </legend>
+                    <%!-- Poll Percentage --%>
+                    <div class="flex items-center justify-between">
+                      <span class="px-2 py-1 bg-teal-50 rounded-lg text-xs text-teal-400 font-medium min-w-[46px] text-center">
+                        <%= calculate_percentage(option, poll.options) %>%
+                      </span>
+                    </div>
+                  </div>
+                  <%!-- Poll Percentage bar --%>
+
+                  <div class="w-full bg-slate-100 h-1 mb-1 mt-2">
+                    <div
+                      class="bg-teal-400 h-1 rounded"
+                      style={"width: #{calculate_percentage(option, poll.options)}%"}
+                    >
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <%!-- Polls which are not voted yet --%>
+              <div class="p-6">
+                <ul class="my-4 space-y-3">
+                  <%= for {option, title} <- with_option_title(poll.options) do %>
+                    <li>
+                      <a
+                        phx-click="vote"
+                        phx-value-poll_id={poll.id}
+                        phx-value-option_id={option.id}
+                        href="#"
+                        class="flex items-center p-3 text-base font-bold text-gray-900 rounded-lg bg-gray-50 hover:bg-gray-100 group hover:shadow dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
+                      >
+                        <span class="inline-flex justify-center items-center w-6 h-6 rounded bg-green-500 text-white font-medium text-sm">
+                          <%= title %>
+                        </span>
+                        <span class="flex-1 ml-3 whitespace-nowrap"><%= option.text %></span>
+                      </a>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <br />
+
+    <%!-- Action modal for New/Edit Poll --%>
+    <.modal
+      :if={@live_action in [:new, :edit]}
+      id="poll-modal"
+      show
+      on_cancel={JS.patch(~p"/polls")}
+    >
+      <.live_component
+        module={ExPollWeb.PollLive.FormComponent}
+        id={@poll.id || :new}
+        title={@page_title}
+        action={@live_action}
+        poll={@poll}
+        patch={~p"/polls"}
+      />
+    </.modal>
+  </body>
+</html>
