@@ -144,7 +144,9 @@ defmodule ExPollWeb.PollLive.Index do
 
   defp calculate_percentage(option, options) do
     total_vote_count = total_vote_count(options)
-    Float.round(100 * option.vote_count / total_vote_count, 2)
+    float = Float.round(100 * option.vote_count / total_vote_count, 2)
+    truncated = trunc(float)
+    if truncated == float, do: truncated, else: float
   end
 
   defp total_vote_count(options) do

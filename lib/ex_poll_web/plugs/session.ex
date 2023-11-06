@@ -16,7 +16,7 @@ defmodule ExPollWeb.Plug.Session do
       conn
       |> put_session(:return_to, conn.request_path)
       |> put_flash(:error, "You have to Sign in to continue")
-      |> redirect(to: "/login")
+      |> redirect(to: "/logout")
       |> halt()
     else
       conn
