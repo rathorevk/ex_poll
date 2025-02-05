@@ -18,10 +18,26 @@ defmodule ExPoll.DataCase do
 
   using do
     quote do
+      alias ExPoll.Repo
+
       import Ecto
       import Ecto.Changeset
+      import Ecto.Query
       import ExPoll.DataCase
     end
+  end
+
+  setup tags do
+    ExPoll.DataCase.setup_sandbox(tags)
+    :ok
+  end
+
+  @doc """
+  Sets up the sandbox based on the test tags.
+  """
+  def setup_sandbox(tags) do
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(ExPoll.Repo, shared: not tags[:async])
+    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
   end
 
   @doc """
@@ -38,19 +54,5 @@ defmodule ExPoll.DataCase do
         opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
       end)
     end)
-  end
-
-  def create_ets_tables do
-    :ets.new(:users, [:set, :public, :named_table, read_concurrency: true])
-    :ets.new(:polls, [:set, :public, :named_table, read_concurrency: true])
-    :ets.new(:options, [:set, :public, :named_table, read_concurrency: true])
-    :ets.new(:votes, [:set, :public, :named_table, read_concurrency: true])
-  end
-
-  def cleanup_ets_tables do
-    :ets.delete_all_objects(:users)
-    :ets.delete_all_objects(:polls)
-    :ets.delete_all_objects(:options)
-    :ets.delete_all_objects(:votes)
   end
 end

@@ -1,7 +1,7 @@
 defmodule ExPollWeb.Router do
   use ExPollWeb, :router
 
-  import ExPollWeb.Plug.Session, only: [redirect_unauthorized: 2, validate_session: 2]
+  import ExPollWeb.UserAuth
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -10,36 +10,17 @@ defmodule ExPollWeb.Router do
     plug :put_root_layout, html: {ExPollWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug :validate_session
+    plug :fetch_current_user
   end
 
   pipeline :api do
     plug :accepts, ["json"]
   end
 
-  pipeline :restricted do
-    plug :browser
-    plug :redirect_unauthorized
-  end
-
   scope "/", ExPollWeb do
     pipe_through :browser
 
     get "/", PageController, :home
-    get "/logout", LogoutController, :index
-    live "/login", LoginLive, :index
-  end
-
-  scope "/", ExPollWeb do
-    pipe_through :restricted
-
-    # pipe_through [:browser, :redirect_unauthorized]
-    live_session :default, on_mount: [{ExPollWeb.LiveAuth, :require_authenticated_user}] do
-      live "/polls", PollLive.Index, :index
-      live "/polls/new", PollLive.Index, :new
-      live "/polls/:id/edit", PollLive.Index, :edit
-      live "/polls/:id/vote/:option_id", PollLive.Index, :vote
-    end
   end
 
   # Other scopes may use custom stacks.
@@ -62,5 +43,58 @@ defmodule ExPollWeb.Router do
       live_dashboard "/dashboard", metrics: ExPollWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
+  end
+
+  ## Authentication routes
+
+  scope "/", ExPollWeb do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    live_session :redirect_if_user_is_authenticated,
+      on_mount: [{ExPollWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      live "/register", UserRegistrationLive, :new
+      live "/log_in", UserLoginLive, :new
+      live "/reset_password", UserForgotPasswordLive, :new
+      live "/reset_password/:token", UserResetPasswordLive, :edit
+    end
+
+    post "/log_in", UserSessionController, :create
+  end
+
+  scope "/", ExPollWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [
+        {ExPollWeb.UserAuth, :ensure_authenticated},
+        {ExPollWeb.UserAuth, :ensure_authorized}
+      ] do
+      live "/users/settings", UserSettingsLive, :edit
+      live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+      live "/admin", AdminFacingLive, :index
+      live "/client", ClientFacingLive, :index
+
+      # polls
+      live "/polls", PollLive.Index, :index
+      live "/polls/new", PollLive.Index, :new
+      live "/polls/:id/edit", PollLive.Index, :edit
+      live "/polls/:id/vote/:option_id", PollLive.Index, :vote
+    end
+  end
+
+  scope "/", ExPollWeb do
+    pipe_through [:browser]
+
+    delete "/log_out", UserSessionController, :delete
+
+    live_session :current_user,
+      on_mount: [{ExPollWeb.UserAuth, :mount_current_user}] do
+      live "/users/confirm/:token", UserConfirmationLive, :edit
+      live "/users/confirm", UserConfirmationInstructionsLive, :new
+    end
+  end
+
+  def route_info(method, path, host) do
+    Phoenix.Router.route_info(__MODULE__, method, path, host)
   end
 end

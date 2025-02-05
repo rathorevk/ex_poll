@@ -7,6 +7,10 @@
 # General application configuration
 import Config
 
+config :ex_poll,
+  ecto_repos: [ExPoll.Repo],
+  generators: [timestamp_type: :utc_datetime]
+
 # Configures the endpoint
 config :ex_poll, ExPollWeb.Endpoint,
   url: [host: "localhost"],

@@ -7,17 +7,13 @@ defmodule ExPollWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_ex_poll_key",
-    signing_salt: "2ydwS51V",
+    signing_salt: "rcZttgNj",
     same_site: "Lax"
-  ]
-
-  @valid_origins [
-    "http://localhost:4000"
   ]
 
   socket "/live", Phoenix.LiveView.Socket,
     websocket: [connect_info: [session: @session_options]],
-    longpoll: [check_origin: @valid_origins]
+    longpoll: [connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -35,6 +31,7 @@ defmodule ExPollWeb.Endpoint do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :ex_poll
   end
 
   plug Phoenix.LiveDashboard.RequestLogger,

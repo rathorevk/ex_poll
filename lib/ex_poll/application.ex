@@ -10,6 +10,8 @@ defmodule ExPoll.Application do
     children = [
       # Start the Telemetry supervisor
       ExPollWeb.Telemetry,
+      ExPoll.Repo,
+
       # Start the PubSub system
       {Phoenix.PubSub, name: ExPoll.PubSub},
       # Start Finch
